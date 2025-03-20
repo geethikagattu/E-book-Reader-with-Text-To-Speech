@@ -86,7 +86,12 @@ def select_book():
         messagebox.showinfo("Selected File", f"You selected: {file_path}")
           # Call your reading function
 # Create the main window
-        
+
+def pause_book() :
+    global stop_audio 
+    stop_audio = threading.Event()
+    stop_audio.set()
+    audio_queue.put(None)
         
 root = tk.Tk()
 root.title("E-book Reader")
@@ -94,6 +99,8 @@ root.geometry("800x900")  # Set a geometry for the window
 
 website_button = tk.Button(root, text="Open Book Website", command=open_website)
 website_button.pack(pady=10)
+
+pause = tk.Button(root , text = "Pause the book" , font = ("Times New Roman" , 12) , command = pause_book)
 
 open_button = tk.Button(root, text="Select Book from Apple Books", command=select_book)
 open_button.pack(pady=20)
@@ -104,6 +111,7 @@ start_button.pack(pady=20)
 # Create a Text widget to display the PDF text
 pri = tk.Text(root, font=("Times New Roman", 12))
 pri.pack(expand=True, fill=tk.BOTH)
+
 
 # Start a thread to play audio
 audio_thread = threading.Thread(target=play_audio)
