@@ -17,92 +17,6 @@ from PIL import Image
 import shutil
 import sqlite3
 
-
-selected_file = ""
-engine = pyttsx3.init()
-voices = engine.getProperty('voices')
-voice_options = {voice.name: voice.id for voice in voices}
-stop_audio = threading.Event()
-paused = threading.Event()
-
-audio_queue = queue.Queue()
-bookmarks = set()
-notes = {}
-
-current_page = 0  # Track the current page number
-
-def open_website():
-    webbrowser.open("https://www.gutenberg.org")
-
-def play_audio():
-    """Plays audio files from the queue using pydub with pause & resume functionality."""
-    while True:
-        filename = audio_queue.get()
-        if filename is None:
-            break
-
-        audio = AudioSegment.from_mp3(filename)
-
-        while paused.is_set():
-            time.sleep(0.5)
-
-        if stop_audio.is_set():
-            break
-
-        play(audio)
-
-        os.remove(filename)
-
-def readbook(file_path):
-    """Reads the book, extracts text, converts to speech, and plays the audio."""
-    global current_page
-    try:
-        doc = fitz.open(file_path)
-        print(f"Total pages: {doc.page_count}")
-
-        for i in range(doc.page_count):
-            if stop_audio.is_set():
-                break
-
-            current_page = i  # Track current page
-            page = doc.load_page(i)
-            read = page.get_text()
-
-            if not read.strip():
-                print(f"Page {i} has no text.")
-                continue
-
-            root.after(0, update_text_widget, read, i)
-
-            read = read[:500] if len(read) > 500 else read
-
-            tts = gTTS(text=read, lang="en")
-            filename = f"voice{i}.mp3"
-            tts.save(filename)
-            audio_queue.put(filename)
-
-        messagebox.showinfo("Finished", "Finished reading the book")
-
-    except Exception as e:
-        messagebox.showerror("Error", str(e))
-
-import os
-import threading
-import queue
-import webbrowser
-import subprocess
-import tkinter as tk
-from tkinter import filedialog, messagebox, simpledialog
-from tkinter import ttk  # Import ttk for Combobox
-from gtts import gTTS
-import fitz  # PyMuPDF
-from pydub import AudioSegment
-from pydub.playback import play
-import time
-import pyttsx3
-import customtkinter as ctk
-from PIL import Image 
-
 selected_file = ""
 engine = pyttsx3.init()
 voices = engine.getProperty('voices')
@@ -605,7 +519,7 @@ voice_dropdown.set(list(voice_options.keys())[0])  # Default selection
 voice_dropdown.bind("<<ComboboxSelected>>", lambda e: set_voice(voice_dropdown.get()))
 
 # Speed Selection Dropdown
-speed_label = tk.Label(right_frame, text="Select Speed:")
+speed_label = ctk.CTkLabel(right_frame, text="Select Speed:")
 speed_label.pack(pady=5)
 
 speed_dropdown = ttk.Combobox(right_frame, values=["Slow", "Normal", "Fast"], state="readonly")
@@ -614,7 +528,7 @@ speed_dropdown.set("Normal")  # Default speed
 speed_dropdown.bind("<<ComboboxSelected>>", lambda e: set_speed(speed_dropdown.get()))
 
 # Pitch Selection Dropdown
-pitch_label = tk.Label(right_frame, text="Select Pitch:")
+pitch_label = ctk.CTkLabel(right_frame, text="Select Pitch:")
 pitch_label.pack(pady=5)
 
 pitch_dropdown = ttk.Combobox(right_frame, values=["Low", "Normal", "High"], state="readonly")
