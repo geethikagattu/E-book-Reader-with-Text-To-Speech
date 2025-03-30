@@ -16,6 +16,7 @@ import customtkinter as ctk
 from PIL import Image 
 import shutil
 import sqlite3
+import platform
 
 selected_file = ""
 engine = pyttsx3.init()
@@ -101,11 +102,23 @@ def start_reading():
     threading.Thread(target=readbook, args=(selected_file,)).start()
 
 def open_book():
-    """Opens Apple Books application."""
+  
     try:
-        subprocess.Popen(["open", "-a", "Books"])
+        if selected_file:
+            system_name = platform.system()
+
+            if system_name == "Windows":
+                os.startfile(selected_file)  # Opens with the default application
+            elif system_name == "Darwin":  # macOS
+                subprocess.Popen(["open", selected_file])
+            elif system_name == "Linux":
+                subprocess.Popen(["xdg-open", selected_file])
+            else:
+                messagebox.showwarning("Unsupported OS", "Cannot open book on this operating system.")
+        else:
+            messagebox.showwarning("No File Selected", "Please select a book first.")
     except Exception as e:
-        print(f"Error opening application: {e}")
+        messagebox.showerror("Error", f"Failed to open book: {str(e)}")
 
 def select_book():
     """Allows the user to select a book file."""
