@@ -228,6 +228,62 @@ def save_book():
     except Exception as e:
         messagebox.showerror("Error", f"Failed to save book: {str(e)}")
 
+def search_text():
+    query = simpledialog.askstring("Search", "Enter text to search:")
+    if not query:
+        return
+
+    text_display.tag_remove("search", "1.0", tk.END)  # Remove old highlights
+    start_pos = "1.0"
+    found = False  # Flag to check if any matches are found
+
+    while True:
+        start_pos = text_display.search(query, start_pos, stopindex=tk.END, nocase=True)
+        if not start_pos:
+            break  # No more matches found
+
+        end_pos = f"{start_pos}+{len(query)}c"
+        text_display.tag_add("search", start_pos, end_pos)
+        start_pos = end_pos
+        found = True  # At least one match was found
+
+    text_display.tag_config("search", background="lightblue")  # Highlight matches
+
+    if not found:
+        messagebox.showinfo("Search Result", "No matches found.")
+
+def categorize_books():
+    """Allows the user to select a book file and categorize it."""
+    global selected_file
+    file_path = filedialog.askopenfilename(filetypes=[("EPUB Files", "*.epub"), ("PDF Files", "*.pdf")])
+    if file_path:
+        selected_file = file_path
+        category = simpledialog.askstring("Categorize Book", "Enter category (e.g., Fiction, Study):")
+        if category:
+            save_book_with_category(selected_file, category)
+            messagebox.showinfo("Selected File", f"You selected: {file_path}\nCategory: {category}")
+
+def save_book_with_category(file_path, category):
+    """Saves the book path and category to the database."""
+    conn = sqlite3.connect("ebooks.db")
+    cursor = conn.cursor()
+    cursor.execute("INSERT INTO books (title, category, path) VALUES (?, ?, ?)", 
+                   (os.path.basename(file_path), category, file_path))
+    conn.commit()
+    conn.close()
+
+def create_database():
+    """Creates the database and the books table if it doesn't exist."""
+    conn = sqlite3.connect("ebooks.db")
+    cursor = conn.cursor()
+    cursor.execute('''CREATE TABLE IF NOT EXISTS books (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        title TEXT NOT NULL,
+                        category TEXT NOT NULL,
+                        path TEXT NOT NULL)''')
+    conn.commit()
+    conn.close()
+
 
 ctk.set_appearance_mode("dark")  # Can be "light" or "dark"
 ctk.set_default_color_theme("blue")  # Options: "blue", "green", "dark-blue"
@@ -259,7 +315,7 @@ logo_label.pack(pady=10)
 ctk.CTkButton(left_frame, text="Select Book",hover_color="#FFB6C1", fg_color="#F48FB1", command=select_book).pack(pady=5, padx=10, fill="x")
 ctk.CTkButton(left_frame, text="Open Book Website",hover_color="#FFB6C1", fg_color="#F48FB1", command=open_website).pack(pady=5, padx=10, fill="x")
 ctk.CTkButton(left_frame, text="Save Book",hover_color="#FFB6C1", fg_color="#F48FB1", command=save_book).pack(pady=5, padx=10, fill="x")
-# ctk.CTkButton(left_frame, text="Categorize E-Book",hover_color="#FFB6C1", fg_color="#F48FB1", command=categorize_book).pack(pady=5, padx=10, fill="x")
+ctk.CTkButton(left_frame, text="Categorize E-Book",hover_color="#FFB6C1", fg_color="#F48FB1", command=categorize_books).pack(pady=5, padx=10, fill="x")
 ctk.CTkButton(left_frame, text="Add Note",hover_color="#FFB6C1", fg_color="#F48FB1", command=add_note).pack(pady=5, padx=10, fill="x")
 ctk.CTkButton(left_frame, text="View Note",hover_color="#FFB6C1", fg_color="#F48FB1", command=view_notes).pack(pady=5, padx=10, fill="x")
 ctk.CTkButton(left_frame, text="Bookmark Page",hover_color="#FFB6C1", fg_color="#F48FB1", command=bookmark_page).pack(pady=5, padx=10, fill="x")
@@ -271,7 +327,7 @@ ctk.CTkButton(right_frame, text="Pause",hover_color="#FFB6C1", fg_color="#F48FB1
 ctk.CTkButton(right_frame, text="Resume",hover_color="#FFB6C1", fg_color="#F48FB1", command=resume_book).pack(pady=5, padx=10, fill="x")
 ctk.CTkButton(right_frame, text="Stop",hover_color="#FFB6C1", fg_color="#F48FB1", command=stop_book).pack(pady=5, padx=10, fill="x")
 ctk.CTkButton(right_frame, text="Highlight Text",hover_color="#FFB6C1", fg_color="#F48FB1", command=highlight_text).pack(pady=5, padx=10, fill="x")
-# ctk.CTkButton(right_frame, text="Search Text",hover_color="#FFB6C1", fg_color="#F48FB1", command=search_text).pack(pady=5, padx=10, fill="x")
+ctk.CTkButton(right_frame, text="Search Text",hover_color="#FFB6C1", fg_color="#F48FB1", command=search_text).pack(pady=5, padx=10, fill="x")
 
 
 # Voice Selection Dropdown
